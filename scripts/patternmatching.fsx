@@ -41,7 +41,7 @@ let updateCheck' rVer cVer =
 
 
 
-#r "../packages/FsCheck/lib/net45/FsCheck"
+#r "../packages/FsCheck/lib/net452/FsCheck"
 open FsCheck
 
 let isolateUserMajor x y = (x, x, x), (y, x, x)
