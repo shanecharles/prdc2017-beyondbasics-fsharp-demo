@@ -22,28 +22,15 @@ goodnight |> Async.RunSynchronously
 open System.IO
 open System.Net
 
-let getStreamContentsAsync (stream : Stream) = 
-    async {
-        let buffer    = Array.zeroCreate 4096
-        let memory    = new MemoryStream ()
-
-        let rec download () = async {
-                let! bits = stream.AsyncRead(buffer)
-                do! memory.AsyncWrite(buffer, 0, bits)
-                if bits > 0 then return! download ()
-        }
-        do! download ()
-        return memory
-    }
-
 let getUrlContentSizeAsync (url : string) = 
     async {
         let request   = WebRequest.Create (url)
         use! response = request.AsyncGetResponse ()
         use stream    = response.GetResponseStream ()   
-        use! memory   = getStreamContentsAsync stream
+        use reader    = new StreamReader(stream)
+        let! content  = reader.ReadToEndAsync () |> Async.AwaitTask
         
-        return (url, memory.Length)
+        return (url, content.Length)
     }
 
 getUrlContentSizeAsync "http://techandwings.ca" |> Async.RunSynchronously

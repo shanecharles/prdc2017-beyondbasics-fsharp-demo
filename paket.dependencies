@@ -1,3 +1,5 @@
 source https://nuget.org/api/v2
 
 nuget FsCheck
+nuget Newtonsoft.Json
+nuget Microsoft.Azure.WebJobs
