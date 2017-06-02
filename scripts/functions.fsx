@@ -1,23 +1,40 @@
-let sayHello name = printfn "Hello %s" name
+let sayHello name = printfn "Hello %s." name
 
-let sayHello' = printfn "Hello %s"
+sayHello "Bob"
+
+let yellHello (name : string) = printfn "HELLO %s!" (name.ToUpper())
+
+yellHello "Bob"
 
 let add x y = x + y
 
 let increment = add 1
+
 let decrement = add -1
 
 
-let seven = 3 |> add 4
 
+
+// Partial Application doesn't mean execute some of the function.
+let datapoints = [|1 .. 500000|]
+let searchKeys = [1000; 50; -1; 1000000]
+
+#time
 
 let seekKey keys key = 
     printfn "Creating index"
     let keyset = Set.ofSeq keys
     printfn "Searching for key: %d" key
-    if keyset |> Set.contains key 
-    then printfn "Key %d was found!" key
-    else printfn "Key %d was not found." key
+    Set.contains key keyset
+
+
+seekKey datapoints 100
+
+List.map (seekKey datapoints) searchKeys
+
+
+
+
 
 
 let seekKey' keys =
@@ -25,21 +42,9 @@ let seekKey' keys =
     let keyset = Set.ofSeq keys
     (fun key -> 
         printfn "Searching for key: %d" key
-        if keyset |> Set.contains key 
-        then printfn "Key %d was found!" key
-        else printfn "Key %d was not found." key)
+        Set.contains key keyset)
 
 
+seekKey' datapoints 1000
 
-type Cattitude =
-    | Lazy
-    | Grumpy
-    | Sarcastic
-    | Indifferent
-
-type Cat = { name : string; mood : Cattitude }
-
-
-
-
-
+List.map (seekKey' datapoints) searchKeys

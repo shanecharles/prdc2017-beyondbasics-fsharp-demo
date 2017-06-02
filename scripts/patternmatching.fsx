@@ -24,6 +24,22 @@ greetAstronaut "dave"
 greetAstronaut "Neil"
 
 
+let (|RGB|) (color : System.Drawing.Color) =
+    (color.R, color.G, color.B)
+
+let printRGB color =
+    match color with
+    | RGB(r,g,b) -> printfn "Red: %d, Green: %d, Blue: %d" r g b
+
+let averageRGBs c1 c2 = 
+    let avg x y = (int x + int y) / 2 |> byte
+    match c1, c2 with
+    | RGB(r,g,b), RGB(r',g',b') -> (avg r r', avg g g', avg b b')
+
+
+let color1 = System.Drawing.Color.FromArgb(255,100,200,148)
+let color2 = System.Drawing.Color.FromArgb(255,200,100,152)
+
 
 let release = (2, 1, 1)
 
@@ -55,6 +71,10 @@ testUpdate (2,1,1)
 
 
 type Version = { Major : int; Minor : int; Build : int }
+
+let (|FileVersion|) (x : int, y : int, z : int) = {Major = x; Minor = y; Build = z}
+
+let printVersion = function FileVersion v -> printfn "%A" v
 
 let (|NoUpdate|_|) (rVer, cVer) =
     if rVer <= cVer then Some ()

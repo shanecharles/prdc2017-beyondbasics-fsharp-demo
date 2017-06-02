@@ -105,8 +105,8 @@ let run (req: HttpRequestMessage, log: TraceWriter) =
     |> function
     | Success update          -> req.CreateResponse(HttpStatusCode.OK,update)  
     | NoUpdateRequired        -> req.CreateResponse(HttpStatusCode.NotModified)
+    | InvalidDataFromClient s -> req.CreateResponse(HttpStatusCode.BadRequest, s)
     | Fail s                  -> log.Error (sprintf "Catastrophic Failure: %s" s)
                                  req.CreateResponse(HttpStatusCode.InternalServerError, "Something has gone horribly wrong.")
-    | InvalidDataFromClient s -> req.CreateResponse(HttpStatusCode.BadRequest, s)
     | InvalidReleaseFormat s  -> log.Error (sprintf "Invalid Relase Format: %s" s)
                                  req.CreateResponse(HttpStatusCode.InternalServerError,"Our bad.")

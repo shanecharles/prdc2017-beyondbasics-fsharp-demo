@@ -60,6 +60,7 @@ asyncSites |> List.map Async.RunSynchronously |> Seq.sortByDescending snd
 asyncSites |> Async.Parallel |> Async.RunSynchronously |> Seq.sortByDescending snd
 
 
+
 let getUrlsContentSizeAsync urls =
     async {
         for url in urls do
