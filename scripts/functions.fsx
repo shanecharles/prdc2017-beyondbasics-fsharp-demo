@@ -17,10 +17,14 @@ let decrement = add -1
 
 decrement 7
 
+let incrementDecrement = increment >> decrement
+
+incrementDecrement 7
+
 
 
 // Partial Application doesn't mean execute some of the function.
-let datapoints = [|1 .. 500000|]
+let datapoints = [|1 .. 400000|]
 let searchKeys = [1000; 50; -1; 1000000]
 
 #time
@@ -35,10 +39,6 @@ let seekKey keys key =
 seekKey datapoints 100
 
 List.map (seekKey datapoints) searchKeys
-
-
-
-
 
 
 let seekKey' keys =
