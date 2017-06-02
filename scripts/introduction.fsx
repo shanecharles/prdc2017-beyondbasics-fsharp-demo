@@ -75,13 +75,15 @@ let fibSeq' = Seq.unfold (fun (x,y) -> Some (y, (y, x+y))) (0L,1L)
 
 fibSeq' |> Seq.take 10 |> Seq.toArray
 
-fibSeq |> Seq.take 10 
-  |> Seq.map (fun x -> x * x * x)
-  |> Seq.filter (fun x -> x % 2L = 0L)
-  |> Seq.toArray
-
-
 let getFibArray n = Seq.take n >> Seq.toArray
 
 (fibSeq |> getFibArray 100) = (fibSeq' |> getFibArray 100)
+
+let evenCubes : int64 seq -> int64 [] = 
+    Seq.map (fun x -> x * x * x)
+    >> Seq.filter (fun x -> x % 2L = 0L)
+    >> Seq.toArray
+
+fibSeq |> Seq.take 10 |> evenCubes
+
 
