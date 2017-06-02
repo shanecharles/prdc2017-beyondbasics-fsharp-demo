@@ -3,6 +3,7 @@ let sayHello name = printfn "Hello %s." name
 sayHello "Bob"
 
 let yellHello (name : string) = printfn "HELLO %s!" (name.ToUpper())
+//let yellHello' name = printfn "HELLO %s!" (name.ToUpper())
 
 yellHello "Bob"
 
@@ -10,8 +11,11 @@ let add x y = x + y
 
 let increment = add 1
 
+increment 7
+
 let decrement = add -1
 
+decrement 7
 
 
 

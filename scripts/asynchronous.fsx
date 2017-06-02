@@ -1,23 +1,3 @@
-let goodnight = async {
-        printfn "Good night"
-        do! Async.Sleep 2000
-        printfn "Good morning"
-    } 
-
-// Run and await
-goodnight |> Async.RunSynchronously
-
-
-
-    
-
-
-
-
-
-
-
-
 
 open System.IO
 open System.Net
@@ -35,29 +15,26 @@ let getUrlContentSizeAsync (url : string) =
 
 getUrlContentSizeAsync "http://techandwings.ca" |> Async.RunSynchronously
 
-let sites = ["http://techandwings.ca"; 
-             "http://www.cnn.com"; 
-             "http://www.foxnews.com";
-             "http://msnbc.com";
-             "http://google.ca";
-             "http://nhl.com";
-             "http://mlb.com";
-             "http://cfl.ca"]
+let sites = [| "http://techandwings.ca"
+               "http://google.ca"
+               "http://cnn.com"
+               "http://apple.com"
+               "http://foxnews.com" |]
 
-let asyncSites = sites |> List.map getUrlContentSizeAsync
+let asyncSites = sites |> Array.map getUrlContentSizeAsync
 
 // #time
 
 
 
 // Serially asynchronous
-asyncSites |> List.map Async.RunSynchronously |> Seq.sortByDescending snd
+asyncSites |> Array.map Async.RunSynchronously |> Array.sortByDescending snd
 
 
 
 
 // Get the lengths in parallel
-asyncSites |> Async.Parallel |> Async.RunSynchronously |> Seq.sortByDescending snd
+asyncSites |> Async.Parallel |> Async.RunSynchronously |> Array.sortByDescending snd
 
 
 
@@ -68,7 +45,17 @@ let getUrlsContentSizeAsync urls =
             printfn "URL: %A" urlSize
     }
 
+let moreSites = [ "http://techandwings.ca" 
+                  "http://www.cnn.com"
+                  "http://www.foxnews.com"
+                  "http://msnbc.com"
+                  "http://google.ca"
+                  "http://nhl.com"
+                  "http://mlb.com"
+                  "http://cfl.ca" ]
+
+
 open System.Threading
 let cancellationSource = new CancellationTokenSource()
-Async.Start (sites |> getUrlsContentSizeAsync, cancellationSource.Token)
+Async.Start (moreSites |> getUrlsContentSizeAsync, cancellationSource.Token)
 cancellationSource.Cancel()

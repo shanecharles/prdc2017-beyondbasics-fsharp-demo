@@ -1,17 +1,21 @@
 open System
 
-
 let showSome data = 
     match data with 
     | Some d -> printfn "The data is: %A" d
     | None   -> printfn "There is no data"
 
+showSome (Some "Bob")
+
+showSome None
 
 
 let showSome' = function
     | Some d -> printfn "The data is: %A" d
     | None   -> printfn "There is no data"
 
+showSome' (Some "Hank")
+showSome' None
 
 let greetAstronaut (name : string) =
     match name.ToUpper() with
@@ -27,21 +31,21 @@ greetAstronaut "Neil"
 let (|RGB|) (color : System.Drawing.Color) =
     (color.R, color.G, color.B)
 
-let printRGB color =
-    match color with
+let printRGB = function
     | RGB(r,g,b) -> printfn "Red: %d, Green: %d, Blue: %d" r g b
+
+let color1 = System.Drawing.Color.FromArgb(100,200,148)
+printRGB color1
 
 let averageRGBs c1 c2 = 
     let avg x y = (int x + int y) / 2 |> byte
     match c1, c2 with
     | RGB(r,g,b), RGB(r',g',b') -> (avg r r', avg g g', avg b b')
 
-
-let color1 = System.Drawing.Color.FromArgb(255,100,200,148)
 let color2 = System.Drawing.Color.FromArgb(255,200,100,152)
 
 
-let release = (2, 1, 1)
+let release = (2, 2, 2)
 
 type RequiredUpdate =
     | Major
@@ -49,8 +53,8 @@ type RequiredUpdate =
     | Build
     | NoUpdate
 
-let updateCheck (rMaj, rMin, rBld) uVersion = 
-    match uVersion with
+let updateCheck (rMaj, rMin, rBld) userVer = 
+    match userVer with
     | (uMaj, _, _) when rMaj > uMaj                                     -> Major
     | (uMaj, uMin, _) when rMaj = uMaj && rMin > uMin                   -> Minor
     | (uMaj, uMin, uBld) when rMaj = uMaj && rMin = uMin && rMin > uBld -> Build
@@ -64,9 +68,9 @@ let testUpdate userVer =
     userVer |> check |> printfn "Update: %A" 
 
 testUpdate (1,1,1)
-testUpdate (2,0,1)
-testUpdate (2,1,0)
 testUpdate (2,1,1)
+testUpdate (2,2,1)
+testUpdate (2,2,2)
 
 
 
@@ -76,24 +80,19 @@ let (|FileVersion|) (x : int, y : int, z : int) = {Major = x; Minor = y; Build =
 
 let printVersion = function FileVersion v -> printfn "%A" v
 
-let (|NoUpdate|_|) (rVer, cVer) =
-    if rVer <= cVer then Some ()
+printVersion release
+
+let (|NoUpdate|_|) (relVer, userVer) =
+    if relVer <= userVer then Some ()
     else None
 
 let (|Major|Minor|Build|NoUpdate|) = function
     | NoUpdate                                   -> NoUpdate
-    | {Major=rMaj},{Major=cMaj} when rMaj > cMaj -> Major
-    | {Minor=rMin},{Minor=cMin} when rMin > cMin -> Minor
+    | {Major=rMaj},{Major=uMaj} when rMaj > uMaj -> Major
+    | {Minor=rMin},{Minor=uMin} when rMin > uMin -> Minor
     | _                                          -> Build
 
 
-
-let parseVersion (version : string) =
-    match version.Split([|'.'|]) with
-    | [|maj; mnr; bld|] -> { Major = Convert.ToInt32(maj)
-                             Minor = Convert.ToInt32(mnr)
-                             Build = Convert.ToInt32(bld) }
-    | _                 -> failwith "Bad release version format"
 
 
 
