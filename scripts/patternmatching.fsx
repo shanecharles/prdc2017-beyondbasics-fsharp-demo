@@ -53,7 +53,7 @@ type RequiredUpdate =
     | Build
     | NoUpdate
 
-let updateCheck (rMaj, rMin, rBld) userVer = 
+let checkForUpdate (rMaj, rMin, rBld) userVer = 
     match userVer with
     | (uMaj, _, _) when rMaj > uMaj                                     -> Major
     | (uMaj, uMin, _) when rMaj = uMaj && rMin > uMin                   -> Minor
@@ -62,7 +62,7 @@ let updateCheck (rMaj, rMin, rBld) userVer =
 
 
 let testUpdate userVer =
-    let check = updateCheck release
+    let check = checkForUpdate release
     printfn "Release: %A" release
     printfn "User: %A" userVer
     userVer |> check |> printfn "Update: %A" 
