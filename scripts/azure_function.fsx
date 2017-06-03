@@ -22,6 +22,9 @@ type Upgrade (upgradeType, url) =
     member x.UpgradeType = upgradeType
     member x.URL = url
 
+let getCurrentRelease () = "2.2.2"
+let getUpgradeRootPath () = ConfigurationManager.AppSettings.["UPGRADE_BASE_URL"]
+
 let createUpgrade baseURL upgradeType upgradeFile =
     Upgrade (upgradeType, sprintf "%s%s" baseURL upgradeFile)
 
@@ -45,7 +48,7 @@ let parseVersion (version : string) =
 
 let Run(req: HttpRequestMessage, log: TraceWriter) =
     async {
-        let upgrade = createUpgrade ConfigurationManager.AppSettings.["UPGRADE_BASE_URL"]
+        let upgrade = getUpgradeRootPath () |> createUpgrade
         let releaseVersion = ConfigurationManager.AppSettings.["RELEASE_VERSION"]
                              |> parseVersion
 

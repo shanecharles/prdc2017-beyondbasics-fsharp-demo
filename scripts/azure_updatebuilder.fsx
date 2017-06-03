@@ -16,7 +16,7 @@ let getCurrentRelease () = "2.2.2"
 
 let getUpgradeRootPath () = "/some/dir/"
 
-type UpdateResult<'a> =
+type BuilderResult<'a> =
     | Success of 'a
     | NoUpdateRequired
     | InvalidReleaseFormat of string
@@ -24,15 +24,15 @@ type UpdateResult<'a> =
     | Fail of string
 
 type UpdateBuilder () =
-    member x.Bind (m, f : 'a -> UpdateResult<'b>) =
+    member x.Bind (m : BuilderResult<'a>, f : 'a -> BuilderResult<'b>) =
         match m with 
-        | Success m'              -> f m'
+        | Success v               -> f v
         | NoUpdateRequired        -> NoUpdateRequired
         | Fail s                  -> Fail s
         | InvalidDataFromClient s -> InvalidDataFromClient s
         | InvalidReleaseFormat s  -> InvalidReleaseFormat s
 
-    member x.Return(m) = Success m
+    member x.Return(v) = Success v
     member x.ReturnFrom(m) = m
 
 [<AllowNullLiteral>]
@@ -44,12 +44,12 @@ type UnsafeVersion () =
 
 type Version = { Major : int; Minor : int; Build : int }
 
-type Upgrade (upgradeType, url) = 
+type UpgradeResponse (upgradeType, url) = 
     member x.UpgradeType = upgradeType
     member x.URL = url
 
-let createUpgrade baseURL (upgradeType : string) (upgradeFile : string) =
-    Upgrade (upgradeType, sprintf "%s%s" baseURL upgradeFile)
+let createUpgradeResponse baseURL (upgradeType : string) (upgradeFile : string) =
+    UpgradeResponse (upgradeType, sprintf "%s%s" baseURL upgradeFile)
 
 let (|NoUpdate|_|) (rVer, uVer) =
     if rVer <= uVer then Some ()
@@ -61,34 +61,35 @@ let (|Major|Minor|Build|NoUpdate|) = function
     | {Minor=rMin},{Minor=uMin} when rMin > uMin -> Minor
     | _                                          -> Build
 
-let checkUpdateAvailable upgrade releaseVersion userVersion =
+let checkUpdateAvailable getUpgradeResponse releaseVersion userVersion =
     match releaseVersion, userVersion with
     | NoUpdate -> NoUpdateRequired 
-    | Major    -> Success (upgrade "Major" "major_upgrade.jpg")
-    | Minor    -> Success (upgrade "Minor" "minor_upgrade.jpg")
-    | Build    -> Success (upgrade "Build" "build_upgrade.jpg")
+    | Major    -> Success (getUpgradeResponse "Major" "major_upgrade.jpg")
+    | Minor    -> Success (getUpgradeResponse "Minor" "minor_upgrade.jpg")
+    | Build    -> Success (getUpgradeResponse "Build" "build_upgrade.jpg")
 
 let toVersion = function
     | [|(true, m); (true, n); (true, b)|] -> Some {Major=m; Minor=n; Build=b}
     | _                                   -> None
 
-let unsafeToVersion error (unsafe : string) =
-    if String.IsNullOrEmpty(unsafe) then error "Version data is missing."
+let unsafeToVersion builderResultError (unsafe : string) =
+    if String.IsNullOrEmpty(unsafe) then builderResultError "Version data is missing."
     else 
         unsafe.Split('.') |> Array.map (Int32.TryParse) 
           |> toVersion
           |> function 
           | Some v -> Success v
-          | None   -> error (sprintf "Invalid Version Format: %s" unsafe)
+          | None   -> builderResultError (sprintf "Invalid Version Format: %s" unsafe)
 
 let deserializeUserVersion data =
+    let error = InvalidDataFromClient
     try
-        let convertToVersion = unsafeToVersion InvalidDataFromClient
+        let convertToUserVersion = unsafeToVersion error
         match JsonConvert.DeserializeObject<UnsafeVersion>(data) with
-        | null   -> convertToVersion String.Empty
-        | unsafe -> unsafe.Version |> convertToVersion
+        | null   -> String.Empty |> convertToUserVersion
+        | unsafe -> unsafe.Version |> convertToUserVersion
     with
-    | ex -> InvalidDataFromClient (ex.Message)
+    | ex -> error (ex.Message)
 
 let getContentData (content : HttpContent) =
     content.ReadAsStringAsync () |> Async.AwaitTask 
@@ -97,11 +98,11 @@ let getContentData (content : HttpContent) =
 let run (req: HttpRequestMessage, log: TraceWriter) =
     let update = UpdateBuilder ()
     update {
-        let upgrade = getUpgradeRootPath () |> createUpgrade
+        let createUpgrade = getUpgradeRootPath () |> createUpgradeResponse
 
         let! relVer = getCurrentRelease () |> unsafeToVersion InvalidReleaseFormat
         let! userVer = req.Content |> getContentData |> deserializeUserVersion
-        return! checkUpdateAvailable upgrade relVer userVer }
+        return! checkUpdateAvailable createUpgrade relVer userVer }
     |> function
     | Success update          -> req.CreateResponse(HttpStatusCode.OK,update)  
     | NoUpdateRequired        -> req.CreateResponse(HttpStatusCode.NotModified)

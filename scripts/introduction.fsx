@@ -9,17 +9,12 @@ yellHello "Bob"
 
 let add x y = x + y
 
+add 4 3
+
 let increment = add 1
 
 increment 7
 
-let decrement = add -1
-
-decrement 7
-
-let incrementDecrement = increment >> decrement
-
-incrementDecrement 7
 
 
 
@@ -54,39 +49,6 @@ seekKey' datapoints 1000
 List.map (seekKey' datapoints) searchKeys
 
 
-let fibonacci n =
-    let rec loop x y c = 
-        if c = n then y
-        else loop y (x+y) (c+1)
-    loop 0L 1L 1
-
-fibonacci 100
-
-let fibSeq =
-    let rec loop x y = seq {
-        yield y
-        yield! loop y (x+y)
-    }
-    loop 0L 1L
-
-fibSeq |> Seq.take 10 |> Seq.toArray
-
-let fibSeq' = Seq.unfold (fun (x,y) -> Some (y, (y, x+y))) (0L,1L) 
-
-fibSeq' |> Seq.take 10 |> Seq.toArray
-
-let getFibArray n = Seq.take n >> Seq.toArray
-
-(fibSeq |> getFibArray 100) = (fibSeq' |> getFibArray 100)
-
-let evenCubes : int64 seq -> int64 [] = 
-    Seq.map (fun x -> x * x * x)
-    >> Seq.filter (fun x -> x % 2L = 0L)
-    >> Seq.toArray
-
-fibSeq |> Seq.take 10 |> evenCubes
-
-
 // Pattern Matching
 
 open System
@@ -99,13 +61,6 @@ let showSome data =
 showSome (Some "Bob")
 showSome None
 showSome (Some 45)
-
-let showSome' = function
-    | Some d -> printfn "The data is: %A" d
-    | None   -> printfn "There is no data"
-
-showSome' (Some "Hank")
-showSome' None
 
 let greetAstronaut (name : string) =
     match name.ToUpper() with

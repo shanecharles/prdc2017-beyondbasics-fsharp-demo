@@ -1,38 +1,17 @@
 open System
 
-let release = (2, 2, 2)
-
-let (|RGB|) (color : System.Drawing.Color) =
-    (color.R, color.G, color.B)
-
-let printRGB = function
-    | RGB(r,g,b) -> printfn "Red: %d, Green: %d, Blue: %d" r g b
-
-let color1 = System.Drawing.Color.FromArgb(100,200,148)
-printRGB color1
-
-let averageRGBs c1 c2 = 
-    let avg x y = (int x + int y) / 2 |> byte
-    match c1, c2 with
-    | RGB(r,g,b), RGB(r',g',b') -> (avg r r', avg g g', avg b b')
-
-let color2 = System.Drawing.Color.FromArgb(255,200,100,152)
-
-
-
 type Version = { Major : int; Minor : int; Build : int }
 
-let (|FileVersion|) (x : int, y : int, z : int) = {Major = x; Minor = y; Build = z}
 
-let printVersion = function FileVersion v -> printfn "%A" v
-
-printVersion release
 
 let (|NoUpdate|_|) (relVer, userVer) =
     if relVer <= userVer then Some ()
     else None
 
-let (|Major|Minor|Build|NoUpdate|) = function
+
+
+let (|Major|Minor|Build|NoUpdate|) (relVer, userVer) =
+    match (relVer, userVer) with
     | NoUpdate                                   -> NoUpdate
     | {Major=rMaj},{Major=uMaj} when rMaj > uMaj -> Major
     | {Minor=rMin},{Minor=uMin} when rMin > uMin -> Minor
