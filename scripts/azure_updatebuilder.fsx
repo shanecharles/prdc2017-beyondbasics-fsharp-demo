@@ -12,10 +12,6 @@ open Microsoft.Azure.WebJobs.Host
 open System.Configuration
 open Newtonsoft.Json
 
-let getCurrentRelease () = "2.2.2"
-
-let getUpgradeRootPath () = "/some/dir/"
-
 type BuilderResult<'a> =
     | Success of 'a
     | NoUpdateRequired
@@ -44,12 +40,15 @@ type UnsafeVersion () =
 
 type Version = { Major : int; Minor : int; Build : int }
 
-type UpgradeResponse (upgradeType, url) = 
+type Upgrade (upgradeType, url) = 
     member x.UpgradeType = upgradeType
     member x.URL = url
 
-let createUpgradeResponse baseURL (upgradeType : string) (upgradeFile : string) =
-    UpgradeResponse (upgradeType, sprintf "%s%s" baseURL upgradeFile)
+let getCurrentRelease () = ConfigurationManager.AppSettings.["RELEASE_VERSION"]
+
+let createUpgrade (upgradeType : string) =
+    let url = sprintf "%s%s_upgrade.jpg" ConfigurationManager.AppSettings.["UPGRADE_BASE_URL"] (upgradeType.ToLower())
+    Upgrade (upgradeType, url)
 
 let (|NoUpdate|_|) (rVer, uVer) =
     if rVer <= uVer then Some ()
@@ -61,12 +60,12 @@ let (|Major|Minor|Build|NoUpdate|) = function
     | {Minor=rMin},{Minor=uMin} when rMin > uMin -> Minor
     | _                                          -> Build
 
-let checkUpdateAvailable getUpgradeResponse releaseVersion userVersion =
+let checkUpdateAvailable releaseVersion userVersion =
     match releaseVersion, userVersion with
     | NoUpdate -> NoUpdateRequired 
-    | Major    -> Success (getUpgradeResponse "Major" "major_upgrade.jpg")
-    | Minor    -> Success (getUpgradeResponse "Minor" "minor_upgrade.jpg")
-    | Build    -> Success (getUpgradeResponse "Build" "build_upgrade.jpg")
+    | Major    -> Success (createUpgrade "Major")
+    | Minor    -> Success (createUpgrade "Minor")
+    | Build    -> Success (createUpgrade "Build")
 
 let toVersion = function
     | [|(true, m); (true, n); (true, b)|] -> Some {Major=m; Minor=n; Build=b}
@@ -98,16 +97,14 @@ let getContentData (content : HttpContent) =
 let run (req: HttpRequestMessage, log: TraceWriter) =
     let update = UpdateBuilder ()
     update {
-        let createUpgrade = getUpgradeRootPath () |> createUpgradeResponse
-
         let! relVer = getCurrentRelease () |> unsafeToVersion InvalidReleaseFormat
         let! userVer = req.Content |> getContentData |> deserializeUserVersion
-        return! checkUpdateAvailable createUpgrade relVer userVer }
+        return! checkUpdateAvailable relVer userVer }
     |> function
     | Success update          -> req.CreateResponse(HttpStatusCode.OK,update)  
     | NoUpdateRequired        -> req.CreateResponse(HttpStatusCode.NotModified)
     | InvalidDataFromClient s -> req.CreateResponse(HttpStatusCode.BadRequest, s)
     | Fail s                  -> log.Error (sprintf "Catastrophic Failure: %s" s)
                                  req.CreateResponse(HttpStatusCode.InternalServerError, "Something has gone horribly wrong.")
-    | InvalidReleaseFormat s  -> log.Error (sprintf "Invalid Relase Format: %s" s)
+    | InvalidReleaseFormat s  -> log.Error (sprintf "Invalid Release Format: %s" s)
                                  req.CreateResponse(HttpStatusCode.InternalServerError,"Our bad.")
