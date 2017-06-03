@@ -12,7 +12,7 @@ open Microsoft.Azure.WebJobs.Host
 open System.Configuration
 open Newtonsoft.Json
 
-let getCurrentRelease () = "2.1.1"
+let getCurrentRelease () = "2.2.2"
 
 let getUpgradeRootPath () = "/some/dir/"
 
@@ -51,14 +51,14 @@ type Upgrade (upgradeType, url) =
 let createUpgrade baseURL (upgradeType : string) (upgradeFile : string) =
     Upgrade (upgradeType, sprintf "%s%s" baseURL upgradeFile)
 
-let (|NoUpdate|_|) (rVer, cVer) =
-    if rVer <= cVer then Some ()
+let (|NoUpdate|_|) (rVer, uVer) =
+    if rVer <= uVer then Some ()
     else None
 
 let (|Major|Minor|Build|NoUpdate|) = function
     | NoUpdate                                   -> NoUpdate
-    | {Major=rMaj},{Major=cMaj} when rMaj > cMaj -> Major
-    | {Minor=rMin},{Minor=cMin} when rMin > cMin -> Minor
+    | {Major=rMaj},{Major=uMaj} when rMaj > uMaj -> Major
+    | {Minor=rMin},{Minor=uMin} when rMin > uMin -> Minor
     | _                                          -> Build
 
 let checkUpdateAvailable upgrade releaseVersion userVersion =
