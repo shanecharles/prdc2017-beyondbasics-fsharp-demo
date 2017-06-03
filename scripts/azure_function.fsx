@@ -12,21 +12,24 @@ open Microsoft.Azure.WebJobs.Host
 open System.Configuration
 open Newtonsoft.Json
 
-type Version = {
-    Major : int
-    Minor : int
-    Build : int
-}
+[<AllowNullLiteral>]
+type UnsafeVersion () = 
+    let mutable version = ""
+    member x.Version 
+        with get() = version
+        and set(v) = version <- v
+
+type Version = { Major : int; Minor : int; Build : int }
 
 type Upgrade (upgradeType, url) = 
     member x.UpgradeType = upgradeType
     member x.URL = url
 
-let getCurrentRelease () = "2.2.2"
-let getUpgradeRootPath () = ConfigurationManager.AppSettings.["UPGRADE_BASE_URL"]
+let getCurrentRelease () = ConfigurationManager.AppSettings.["RELEASE_VERSION"]
 
-let createUpgrade baseURL upgradeType upgradeFile =
-    Upgrade (upgradeType, sprintf "%s%s" baseURL upgradeFile)
+let createUpgrade (upgradeType : string) =
+    let url = sprintf "%s%s_upgrade.jpg" ConfigurationManager.AppSettings.["UPGRADE_BASE_URL"] (upgradeType.ToLower())
+    Upgrade (upgradeType, url)
 
 let (|NoUpdate|_|) (rVer, uVer) =
     if rVer <= uVer then Some ()
@@ -38,38 +41,43 @@ let (|Major|Minor|Build|NoUpdate|) = function
     | {Minor=rMin},{Minor=uMin} when rMin > uMin -> Minor
     | _                                          -> Build
 
-let parseVersion (version : string) =
-    match version.Split([|'.'|]) with
-    | [|maj; mnr; bld|] -> { Major = Convert.ToInt32(maj)
-                             Minor = Convert.ToInt32(mnr)
-                             Build = Convert.ToInt32(bld) }
-    | _                 -> failwith "Bad release version format"
+let toVersion = function
+    | [|(true, m); (true, n); (true, b)|] -> Some {Major=m; Minor=n; Build=b}
+    | _                                   -> None
+
+let unsafeToVersion (unsafe : string) =
+    if String.IsNullOrEmpty(unsafe) then None
+    else 
+        unsafe.Split('.') |> Array.map (Int32.TryParse) |> toVersion  
 
 
 let Run(req: HttpRequestMessage, log: TraceWriter) =
     async {
-        let upgrade = getUpgradeRootPath () |> createUpgrade
-        let releaseVersion = ConfigurationManager.AppSettings.["RELEASE_VERSION"]
-                             |> parseVersion
-
-        let! data = req.Content.ReadAsStringAsync() |> Async.AwaitTask
-
-        if not (String.IsNullOrEmpty(data)) then
-            try 
-                let userVersion = JsonConvert.DeserializeObject<Version>(data)
-                let update = match releaseVersion, userVersion with
-                             | NoUpdate -> None 
-                             | Major    -> Some (upgrade "Major" "major_upgrade.jpg")
-                             | Minor    -> Some (upgrade "Minor" "minor_upgrade.jpg")
-                             | Build    -> Some (upgrade "Build" "build_upgrade.jpg")
-
-                return match update with
-                       | None   -> req.CreateResponse(HttpStatusCode.NotModified)
-                       | Some u -> req.CreateResponse(HttpStatusCode.OK,u) 
-            with
-            | ex ->
-                log.Error(ex.Message)
-                return req.CreateResponse(HttpStatusCode.BadRequest, "Invalid version format.");
+        let releaseVersion = getCurrentRelease () |> unsafeToVersion
+        if releaseVersion.IsSome then
+            let! data = req.Content.ReadAsStringAsync() |> Async.AwaitTask
+            if not (String.IsNullOrEmpty(data)) then
+                try 
+                    return 
+                      match JsonConvert.DeserializeObject<UnsafeVersion>(data) with
+                      | null   -> req.CreateResponse(HttpStatusCode.BadRequest, sprintf "Invalid user version: %s" data)
+                      | unsafe -> 
+                          unsafeToVersion unsafe.Version
+                          |> Option.bind(fun userVersion -> 
+                                          match releaseVersion.Value, userVersion with
+                                          | NoUpdate -> None 
+                                          | Major    -> Some (createUpgrade "Major")
+                                          | Minor    -> Some (createUpgrade "Minor")
+                                          | Build    -> Some (createUpgrade "Build"))
+                          |> function
+                            | None   -> req.CreateResponse(HttpStatusCode.NotModified)
+                            | Some u -> req.CreateResponse(HttpStatusCode.OK,u) 
+                with
+                | ex ->
+                    log.Error(ex.Message)
+                    return req.CreateResponse(HttpStatusCode.BadRequest, "Invalid version format.");
+            else
+                return req.CreateResponse(HttpStatusCode.BadRequest, "No data.");
         else
-            return req.CreateResponse(HttpStatusCode.BadRequest, "No data.");
+            return req.CreateResponse(HttpStatusCode.InternalServerError, "oops")
     } |> Async.RunSynchronously
