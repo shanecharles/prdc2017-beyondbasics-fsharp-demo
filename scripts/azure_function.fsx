@@ -41,14 +41,20 @@ let (|Major|Minor|Build|NoUpdate|) = function
     | {Minor=rMin},{Minor=uMin} when rMin > uMin -> Minor
     | _                                          -> Build
 
-let toVersion = function
-    | [|(true, m); (true, n); (true, b)|] -> Some {Major=m; Minor=n; Build=b}
-    | _                                   -> None
+let checkUpdateAvailable relVer userVer = 
+    match relVer, userVer with
+    | NoUpdate -> None 
+    | Major    -> Some (createUpgrade "Major")
+    | Minor    -> Some (createUpgrade "Minor")
+    | Build    -> Some (createUpgrade "Build")
 
 let unsafeToVersion (unsafe : string) =
     if String.IsNullOrEmpty(unsafe) then None
     else 
-        unsafe.Split('.') |> Array.map (Int32.TryParse) |> toVersion  
+        unsafe.Split('.') |> Array.map (Int32.TryParse) 
+        |> function
+        | [|(true, m); (true, n); (true, b)|] -> Some {Major=m; Minor=n; Build=b}
+        | _                                   -> None
 
 
 let Run(req: HttpRequestMessage, log: TraceWriter) =
@@ -63,12 +69,7 @@ let Run(req: HttpRequestMessage, log: TraceWriter) =
                       | null   -> req.CreateResponse(HttpStatusCode.BadRequest, sprintf "Invalid user version: %s" data)
                       | unsafe -> 
                           unsafeToVersion unsafe.Version
-                          |> Option.bind(fun userVersion -> 
-                                          match releaseVersion.Value, userVersion with
-                                          | NoUpdate -> None 
-                                          | Major    -> Some (createUpgrade "Major")
-                                          | Minor    -> Some (createUpgrade "Minor")
-                                          | Build    -> Some (createUpgrade "Build"))
+                          |> Option.bind(fun userVersion -> checkUpdateAvailable releaseVersion.Value userVersion)
                           |> function
                             | None   -> req.CreateResponse(HttpStatusCode.NotModified)
                             | Some u -> req.CreateResponse(HttpStatusCode.OK,u) 

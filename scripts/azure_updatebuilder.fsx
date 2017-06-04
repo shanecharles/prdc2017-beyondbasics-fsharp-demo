@@ -29,7 +29,7 @@ type UpdateBuilder () =
         | InvalidReleaseFormat s  -> InvalidReleaseFormat s
 
     member x.Return(v) = Success v
-    member x.ReturnFrom(m) = m
+    member x.ReturnFrom(m : BuilderResult<'a>) = m
 
 [<AllowNullLiteral>]
 type UnsafeVersion () = 
@@ -67,28 +67,22 @@ let checkUpdateAvailable releaseVersion userVersion =
     | Minor    -> Success (createUpgrade "Minor")
     | Build    -> Success (createUpgrade "Build")
 
-let toVersion = function
-    | [|(true, m); (true, n); (true, b)|] -> Some {Major=m; Minor=n; Build=b}
-    | _                                   -> None
-
 let unsafeToVersion builderResultError (unsafe : string) =
     if String.IsNullOrEmpty(unsafe) then builderResultError "Version data is missing."
     else 
         unsafe.Split('.') |> Array.map (Int32.TryParse) 
-          |> toVersion
           |> function 
-          | Some v -> Success v
-          | None   -> builderResultError (sprintf "Invalid Version Format: %s" unsafe)
+          | [|(true, m); (true, n); (true, b)|] -> Success {Major=m; Minor=n; Build=b}
+          | _                                   -> builderResultError (sprintf "Invalid Version Format: %s" unsafe)
+          
 
 let deserializeUserVersion data =
-    let error = InvalidDataFromClient
     try
-        let convertToUserVersion = unsafeToVersion error
         match JsonConvert.DeserializeObject<UnsafeVersion>(data) with
-        | null   -> String.Empty |> convertToUserVersion
-        | unsafe -> unsafe.Version |> convertToUserVersion
+        | null   -> InvalidDataFromClient "No data could be retrieved."
+        | unsafe -> unsafe.Version |> unsafeToVersion InvalidDataFromClient
     with
-    | ex -> error (ex.Message)
+    | ex -> InvalidDataFromClient (ex.Message)
 
 let getContentData (content : HttpContent) =
     content.ReadAsStringAsync () |> Async.AwaitTask 
