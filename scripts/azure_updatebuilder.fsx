@@ -74,7 +74,6 @@ let unsafeToVersion builderResultError (unsafe : string) =
           |> function 
           | [|(true, m); (true, n); (true, b)|] -> Success {Major=m; Minor=n; Build=b}
           | _                                   -> builderResultError (sprintf "Invalid Version Format: %s" unsafe)
-          
 
 let deserializeUserVersion data =
     try
