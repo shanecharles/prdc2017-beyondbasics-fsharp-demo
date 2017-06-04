@@ -55,7 +55,7 @@ open System
 
 let showSome data = 
     match data with 
-    | Some d -> printfn "The data is: %A" d
+    | Some v -> printfn "The data is: %A" v
     | None   -> printfn "There is no data"
 
 showSome (Some "Bob")
@@ -70,7 +70,6 @@ let greetAstronaut (name : string) =
 
 
 greetAstronaut "dave"
-greetAstronaut "Neil"
 
 
 let release = (2, 2, 2)
@@ -89,13 +88,3 @@ let checkForUpdate (rMaj, rMin, rBld) userVer =
     | _                                                                 -> NoUpdate
 
 
-let testUpdate userVer =
-    let check = checkForUpdate release
-    printfn "Release: %A" release
-    printfn "User: %A" userVer
-    userVer |> check |> printfn "Update: %A" 
-
-testUpdate (1,1,1)
-testUpdate (2,1,1)
-testUpdate (2,2,1)
-testUpdate (2,2,2)
