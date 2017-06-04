@@ -18,6 +18,12 @@ let (|Major|Minor|Build|NoUpdate|) (relVer, userVer) =
     | _                                          -> Build
 
 
+let checkUpdate relVer userVer = 
+    match (relVer, userVer) with
+    | Major    -> "Major"
+    | Minor    -> "Minor"
+    | Build    -> "Build"
+    | NoUpdate -> "NoUpdate"
 
 
 
