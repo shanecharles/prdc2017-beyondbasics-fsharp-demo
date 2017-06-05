@@ -48,7 +48,7 @@ let v2 = {v1 with Build=3}
 v1 <= v2
 
 
-let (|NoUpdate|_|) (relVer, userVer) =
+let (|NoUpdatePartial|_|) (relVer, userVer) =
     if relVer <= userVer then Some ()
     else None
 
@@ -56,7 +56,7 @@ let (|NoUpdate|_|) (relVer, userVer) =
 
 let (|Major|Minor|Build|NoUpdate|) (relVer, userVer) =
     match (relVer, userVer) with
-    | NoUpdate                                   -> NoUpdate
+    | NoUpdatePartial                            -> NoUpdate
     | {Major=rMaj},{Major=uMaj} when rMaj > uMaj -> Major
     | {Minor=rMin},{Minor=uMin} when rMin > uMin -> Minor
     | _                                          -> Build

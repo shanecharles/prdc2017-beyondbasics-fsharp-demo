@@ -16,29 +16,29 @@ let add x y = x + y
 
 add 4 3
 
-let increment = add 1
+let add4 = add 4
 
-increment 7
+add4 3
 
 
 
 
 
 let fibSeq = 
-    let rec loop x y = seq {
+    let rec loop (x, y) = seq {
             yield y
-            yield! loop y (x+y)
+            yield! loop (y, (x+y))
         }
-    loop 0L 1L
+    loop (0L, 1L)
 
-let fourFibsInForty = Seq.toList (Seq.map string (Seq.take 4 (Seq.skip 40 fibSeq)))
-
-
+let fourFibsInForties = Seq.toList (Seq.map string (Seq.take 4 (Seq.skip 40 fibSeq)))
 
 
 
 
-let fourFibsInForty' = 
+
+
+let fourFibsInForties' = 
     fibSeq |> Seq.skip 40
       |> Seq.take 4
       |> Seq.map string
@@ -59,6 +59,10 @@ type Cat (name : string, remainingLives : int) =
 
 let mutable cat2 : Cat = null
 cat2 |> isNull
+
+
+
+
 
 #r "../packages/Newtonsoft.Json/lib/net45/Newtonsoft.Json.dll"
 open Newtonsoft.Json

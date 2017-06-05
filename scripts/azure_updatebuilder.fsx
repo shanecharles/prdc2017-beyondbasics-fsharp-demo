@@ -50,12 +50,12 @@ let createUpgrade (upgradeType : string) =
     let url = sprintf "%s%s_upgrade.jpg" ConfigurationManager.AppSettings.["UPGRADE_BASE_URL"] (upgradeType.ToLower())
     UpgradeResult (upgradeType, url)
 
-let (|NoUpdate|_|) (rVer, uVer) =
+let (|NoUpdatePartial|_|) (rVer, uVer) =
     if rVer <= uVer then Some ()
     else None
 
 let (|Major|Minor|Build|NoUpdate|) = function
-    | NoUpdate                                   -> NoUpdate
+    | NoUpdatePartial                            -> NoUpdate
     | {Major=rMaj},{Major=uMaj} when rMaj > uMaj -> Major
     | {Minor=rMin},{Minor=uMin} when rMin > uMin -> Minor
     | _                                          -> Build
