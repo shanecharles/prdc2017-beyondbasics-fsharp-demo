@@ -35,27 +35,3 @@ asyncSites |> Array.map Async.RunSynchronously |> Array.sortByDescending snd
 
 // Get the lengths in parallel
 asyncSites |> Async.Parallel |> Async.RunSynchronously |> Array.sortByDescending snd
-
-
-
-let getUrlsContentSizeAsync urls =
-    async {
-        for url in urls do
-            let! urlSize = getUrlContentSizeAsync url
-            printfn "URL: %A" urlSize
-    }
-
-let moreSites = [ "http://techandwings.ca" 
-                  "http://www.cnn.com"
-                  "http://www.foxnews.com"
-                  "http://msnbc.com"
-                  "http://google.ca"
-                  "http://nhl.com"
-                  "http://mlb.com"
-                  "http://cfl.ca" ]
-
-
-open System.Threading
-let cancellationSource = new CancellationTokenSource()
-Async.Start (moreSites |> getUrlsContentSizeAsync, cancellationSource.Token)
-cancellationSource.Cancel()

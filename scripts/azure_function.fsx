@@ -68,11 +68,14 @@ let Run(req: HttpRequestMessage, log: TraceWriter) =
                       match JsonConvert.DeserializeObject<UnsafeVersion>(data) with
                       | null   -> req.CreateResponse(HttpStatusCode.BadRequest, sprintf "Invalid user version: %s" data)
                       | unsafe -> 
-                          unsafeToVersion unsafe.Version
-                          |> Option.bind(fun userVersion -> checkUpdateAvailable releaseVersion.Value userVersion)
-                          |> function
-                            | None   -> req.CreateResponse(HttpStatusCode.NotModified)
-                            | Some u -> req.CreateResponse(HttpStatusCode.OK,u) 
+                          unsafe.Version |> unsafeToVersion 
+                          |> function 
+                          | None             -> req.CreateResponse(HttpStatusCode.BadRequest, sprintf "Invalid user version: %s" unsafe.Version)
+                          | Some userVersion ->
+                                checkUpdateAvailable releaseVersion.Value userVersion
+                                |> function
+                                | None   -> req.CreateResponse(HttpStatusCode.NotModified)
+                                | Some u -> req.CreateResponse(HttpStatusCode.OK,u) 
                 with
                 | ex ->
                     log.Error(ex.Message)

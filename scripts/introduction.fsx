@@ -16,75 +16,16 @@ let increment = add 1
 increment 7
 
 
+// nulls
 
+[<AllowNullLiteral>]
+type Cat (name : string, remainingLives : int) = 
+    member x.Name = name
+    member x.RemainingLives = remainingLives
 
-// Partial Application doesn't mean execute some of the function.
-let datapoints = [|1 .. 400000|]
-let searchKeys = [1000; 50; -1; 1000000]
+let mutable cat2 : Cat = null
+cat2 |> isNull
 
-#time
-
-let seekKey keys key = 
-    printfn "Creating index"
-    let keyset = Set.ofSeq keys
-    printfn "Searching for key: %d" key
-    Set.contains key keyset
-
-
-seekKey datapoints 100
-
-List.map (seekKey datapoints) searchKeys
-
-
-let seekKey' keys =
-    printfn "Creating index"
-    let keyset = Set.ofSeq keys
-    (fun key -> 
-        printfn "Searching for key: %d" key
-        Set.contains key keyset)
-
-
-seekKey' datapoints 1000
-
-List.map (seekKey' datapoints) searchKeys
-
-
-// Pattern Matching
-
-open System
-
-let showSome data = 
-    match data with 
-    | Some v -> printfn "The data is: %A" v
-    | None   -> printfn "There is no data"
-
-showSome (Some "Bob")
-showSome None
-showSome (Some 45)
-
-let greetAstronaut (name : string) =
-    match name.ToUpper() with
-    | "NEIL" -> printfn "All hail the first person to step on the moon!"
-    | "DAVE" -> printfn "I'm sorry %s, I'm afraid I can't do that." name
-    | _      -> printfn "Hi %s!" name
-
-
-greetAstronaut "dave"
-
-
-let release = (2, 2, 2)
-
-type RequiredUpdate =
-    | Major
-    | Minor
-    | Build
-    | NoUpdate
-
-let checkForUpdate (rMaj, rMin, rBld) userVer = 
-    match userVer with
-    | (uMaj, _, _) when rMaj > uMaj                                     -> Major
-    | (uMaj, uMin, _) when rMaj = uMaj && rMin > uMin                   -> Minor
-    | (uMaj, uMin, uBld) when rMaj = uMaj && rMin = uMin && rMin > uBld -> Build
-    | _                                                                 -> NoUpdate
-
-
+#r "../packages/Newtonsoft.Json/lib/net45/Newtonsoft.Json.dll"
+open Newtonsoft.Json
+let nullCat = JsonConvert.DeserializeObject<Cat>("")

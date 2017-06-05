@@ -1,7 +1,36 @@
-open System
+let showSome data = 
+    match data with 
+    | Some v -> printfn "The data is: %A" v
+    | None   -> printfn "There is no data"
+
+showSome (Some "Bob")
+showSome None
+showSome (Some 45)
+
+
+
+type RequiredUpdate =
+    | Major
+    | Minor
+    | Build
+    | NoUpdate
+
+let checkForUpdate (rMaj, rMin, rBld) userVer = 
+    match userVer with
+    | (uMaj, _, _) when rMaj > uMaj                                     -> Major
+    | (uMaj, uMin, _) when rMaj = uMaj && rMin > uMin                   -> Minor
+    | (uMaj, uMin, uBld) when rMaj = uMaj && rMin = uMin && rMin > uBld -> Build
+    | _                                                                 -> NoUpdate
+
+checkForUpdate (2,2,2) (1,1,1)
+
+
+
 
 type Version = { Major : int; Minor : int; Build : int }
-
+let v1 = {Major=2; Minor=2; Build=2} 
+let v2 = {v1 with Build=3}
+v1 <= v2
 
 
 let (|NoUpdate|_|) (relVer, userVer) =
@@ -24,6 +53,14 @@ let checkUpdate relVer userVer =
     | Minor    -> "Minor"
     | Build    -> "Build"
     | NoUpdate -> "NoUpdate"
+
+
+
+
+
+
+
+
 
 
 
