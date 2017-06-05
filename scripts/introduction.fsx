@@ -1,3 +1,8 @@
+let helloWorld = "hello World"
+
+let helloWorld' () = "hello world"
+
+
 let sayHello name = printfn "Hello %s." name
 
 sayHello "Bob"
@@ -14,6 +19,35 @@ add 4 3
 let increment = add 1
 
 increment 7
+
+
+
+
+
+let fibSeq = 
+    let rec loop x y = seq {
+            yield y
+            yield! loop y (x+y)
+        }
+    loop 0L 1L
+
+let fourFibsInForty = Seq.toList (Seq.map string (Seq.take 4 (Seq.skip 40 fibSeq)))
+
+
+
+
+
+
+let fourFibsInForty' = 
+    fibSeq |> Seq.skip 40
+      |> Seq.take 4
+      |> Seq.map string
+      |> Seq.toList
+
+
+
+
+
 
 
 // nulls

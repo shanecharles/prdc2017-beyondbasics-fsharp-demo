@@ -1,3 +1,9 @@
+(*
+type Option<'t> =
+    | Some of 't
+    | None
+*)
+
 let showSome data = 
     match data with 
     | Some v -> printfn "The data is: %A" v
@@ -6,6 +12,10 @@ let showSome data =
 showSome (Some "Bob")
 showSome None
 showSome (Some 45)
+
+
+
+
 
 
 
@@ -23,6 +33,11 @@ let checkForUpdate (rMaj, rMin, rBld) userVer =
     | _                                                                 -> NoUpdate
 
 checkForUpdate (2,2,2) (1,1,1)
+
+
+
+
+
 
 
 

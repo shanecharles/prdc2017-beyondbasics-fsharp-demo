@@ -21,7 +21,7 @@ type UnsafeVersion () =
 
 type Version = { Major : int; Minor : int; Build : int }
 
-type Upgrade (upgradeType, url) = 
+type UpgradeResult (upgradeType, url) = 
     member x.UpgradeType = upgradeType
     member x.URL = url
 
@@ -29,7 +29,7 @@ let getCurrentRelease () = ConfigurationManager.AppSettings.["RELEASE_VERSION"]
 
 let createUpgrade (upgradeType : string) =
     let url = sprintf "%s%s_upgrade.jpg" ConfigurationManager.AppSettings.["UPGRADE_BASE_URL"] (upgradeType.ToLower())
-    Upgrade (upgradeType, url)
+    UpgradeResult (upgradeType, url)
 
 let (|NoUpdate|_|) (rVer, uVer) =
     if rVer <= uVer then Some ()

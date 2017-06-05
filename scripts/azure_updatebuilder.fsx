@@ -40,7 +40,7 @@ type UnsafeVersion () =
 
 type Version = { Major : int; Minor : int; Build : int }
 
-type Upgrade (upgradeType, url) = 
+type UpgradeResult (upgradeType, url) = 
     member x.UpgradeType = upgradeType
     member x.URL = url
 
@@ -48,7 +48,7 @@ let getCurrentRelease () = ConfigurationManager.AppSettings.["RELEASE_VERSION"]
 
 let createUpgrade (upgradeType : string) =
     let url = sprintf "%s%s_upgrade.jpg" ConfigurationManager.AppSettings.["UPGRADE_BASE_URL"] (upgradeType.ToLower())
-    Upgrade (upgradeType, url)
+    UpgradeResult (upgradeType, url)
 
 let (|NoUpdate|_|) (rVer, uVer) =
     if rVer <= uVer then Some ()
@@ -94,7 +94,7 @@ let run (req: HttpRequestMessage, log: TraceWriter) =
         let! userVer = req.Content |> getContentData |> deserializeUserVersion
         return! checkUpdateAvailable relVer userVer }
     |> function
-    | Success update          -> req.CreateResponse(HttpStatusCode.OK,update)  
+    | Success result          -> req.CreateResponse(HttpStatusCode.OK, result)  
     | NoUpdateRequired        -> req.CreateResponse(HttpStatusCode.NotModified)
     | InvalidDataFromClient s -> req.CreateResponse(HttpStatusCode.BadRequest, s)
     | Fail s                  -> log.Error (sprintf "Catastrophic Failure: %s" s)
