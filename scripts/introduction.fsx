@@ -16,9 +16,9 @@ let add x y = x + y
 
 add 4 3
 
-let add4 = add 4
+let increaseByFour = add 4
 
-add4 3
+increaseByFour 3
 
 
 
