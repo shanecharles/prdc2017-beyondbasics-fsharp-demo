@@ -31,18 +31,11 @@ let fibSeq =
         }
     loop (0L, 1L)
 
-let fourFibsInForties = Seq.toList (Seq.map string (Seq.take 4 (Seq.skip 40 fibSeq)))
 
-
-
-
-
-
-let fourFibsInForties' = 
-    fibSeq |> Seq.skip 40
-      |> Seq.take 4
-      |> Seq.map string
-      |> Seq.toList
+fibSeq |> Seq.skip 40
+  |> Seq.take 4
+  |> Seq.map string
+  |> Seq.toList
 
 
 
